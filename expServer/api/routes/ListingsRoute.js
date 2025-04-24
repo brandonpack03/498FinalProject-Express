@@ -1,8 +1,8 @@
 import express from "express";
-const userRouter = express.Router();  
+const listRouter = express.Router();  
 import pool from "./PoolConnection.js";
 
-userRouter.get("/listings", async (req, res) => {
+listRouter.get("/listings", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM listings");
     res.json(result.rows);
@@ -12,7 +12,7 @@ userRouter.get("/listings", async (req, res) => {
   }
 });
 
-userRouter.get("/getlisting", async (req, res) => {
+listRouter.get("/getuserlisting", async (req, res) => {
   try {
     const id1 = req.query.id;
     const result = await pool.query("SELECT * FROM users WHERE listingid = $1", [id1]);
@@ -23,7 +23,7 @@ userRouter.get("/getlisting", async (req, res) => {
   }
 });
 
-userRouter.delete("/dellisting", async (req, res) => {
+listRouter.delete("/dellisting", async (req, res) => {
   try {
     const id1 = req.query.id;
     await pool.query("DELETE FROM listings WHERE listingid = $1", [id1]);
@@ -52,7 +52,7 @@ userRouter.delete("/dellisting", async (req, res) => {
 
 
 
-userRouter.post("/addlisting", async (req, res) => {
+listRouter.post("/addlisting", async (req, res) => {
   try {
     const { username, password, balance = 1000.00, isadmin = false } = req.body;
     const query = `
@@ -67,5 +67,33 @@ userRouter.post("/addlisting", async (req, res) => {
   }
 });
 
+// POST /shop/sell - Create new listing and assign to user
+listRouter.post("/sell", async (req, res) => {
+  const { condition, price, type, image, userId } = req.body;
+
+  try {
+    // Insert into Listings
+    const listingResult = await db.query(
+      `INSERT INTO Listings (Condition, Price, Type, Image)
+       VALUES ($1, $2, $3, $4)
+       RETURNING ListingID`,
+      [condition, price, type, image]
+    );
+
+    const listingId = listingResult.rows[0].listingid;
+
+    // Insert into User_Listing
+    await db.query(
+      `INSERT INTO User_Listing (ListingID, UserID)
+       VALUES ($1, $2)`,
+      [listingId, userId]
+    );
+
+    res.status(201).json({ message: "Listing created and assigned to user." });
+  } catch (error) {
+    console.error("Error creating listing:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export default userRouter;
