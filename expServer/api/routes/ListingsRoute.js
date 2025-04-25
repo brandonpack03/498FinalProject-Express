@@ -67,23 +67,47 @@ listRouter.post("/addlisting", async (req, res) => {
   }
 });
 
-// POST /shop/sell - Create new listing and assign to user
 listRouter.post("/sell", async (req, res) => {
-  const { condition, price, type, image, userId } = req.body;
+  const { condition, type, image, userId } = req.body;
+
+  // Base prices
+  const basePrices = {
+    CPU: 400,
+    GPU: 500,
+    RAM: 300,
+    "Hard Drive": 200,
+  };
+
+  // Depreciation multipliers
+  const depreciation = {
+    "Brand New": 1.0,
+    "Lightly Used": 0.9,
+    "Poorly Used": 0.7,
+    "Damaged": 0.5,
+  };
 
   try {
+    // Validate inputs
+    if (!basePrices[type] || !depreciation[condition]) {
+      return res.status(400).json({ error: "Invalid type or condition" });
+    }
+
+    // Calculate price
+    const originalPrice = basePrices[type];
+    const finalPrice = originalPrice * depreciation[condition];
+
     // Insert into Listings
-    const listingResult = await db.query(
+    const listingResult = await pool.query(
       `INSERT INTO Listings (Condition, Price, Type, Image)
        VALUES ($1, $2, $3, $4)
        RETURNING ListingID`,
-      [condition, price, type, image]
+      [condition, finalPrice, type, image]
     );
 
     const listingId = listingResult.rows[0].listingid;
 
     // Insert into User_Listing
-    await db.query(
+    await pool.query(
       `INSERT INTO User_Listing (ListingID, UserID)
        VALUES ($1, $2)`,
       [listingId, userId]
@@ -96,4 +120,5 @@ listRouter.post("/sell", async (req, res) => {
   }
 });
 
-export default userRouter;
+
+export default listRouter;
