@@ -120,9 +120,5 @@ listRouter.post("/sell", async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-
-=======
 //your mom
->>>>>>> e177cde99b7d6b7837951332cdb14c7e226c8873
 export default listRouter;
