@@ -120,5 +120,21 @@ listRouter.post("/sell", async (req, res) => {
   }
 });
 
+listRouter.get("/browselistings", async (req, res) => {
+  try {
+    const query = `
+      SELECT l.*, ul.userid
+      FROM Listings l
+      JOIN User_Listing ul ON l.listingid = ul.listingid
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching browse listings:", error);
+    res.status(500).json({ error: "Failed to fetch listings." });
+  }
+});
+
+
 //your mom
 export default listRouter;
