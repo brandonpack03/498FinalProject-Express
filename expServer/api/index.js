@@ -18,7 +18,7 @@ app.use(
 );
 
 app.use("/shop", userRouter);
-app.use("/shop2", listRouter);
+app.use("/shop", listRouter);
 
 app.get("/", (req, res) => {
   try {
