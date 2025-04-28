@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Allow requests from your frontend domain
+
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://mini-project3-mj9a.vercel.app"],

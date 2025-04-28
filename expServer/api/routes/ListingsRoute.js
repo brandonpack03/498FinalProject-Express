@@ -26,9 +26,7 @@ listRouter.delete("/deletelisting", async (req, res) => {
   const { id } = req.query;
 
   try {
-    // Delete from User_Listing first (foreign key dependency)
     await pool.query("DELETE FROM User_Listing WHERE listingid = $1", [id]);
-    // Then delete from Listings
     await pool.query("DELETE FROM Listings WHERE listingid = $1", [id]);
 
     res.json({ message: "Listing deleted successfully" });
@@ -37,24 +35,6 @@ listRouter.delete("/deletelisting", async (req, res) => {
     res.status(500).json({ error: "Failed to delete listing." });
   }
 });
-
-
-// userRouter.post("/updatelisting", async (req, res) => {
-//   try {
-//     const { listingid, username, password } = req.body;
-//     const query = `
-//       UPDATE users
-//       SET username = '${username}', password = '${password}'
-//       WHERE userid = ${userid}
-//     `;
-//     await pool.query(query);
-//     res.json({ ans: 1 });
-//   } catch (error) {
-//     console.error("Query error:", error);
-//     res.json({ ans: 0 });
-//   }
-// });
-
 
 
 listRouter.post("/addlisting", async (req, res) => {
@@ -75,7 +55,7 @@ listRouter.post("/addlisting", async (req, res) => {
 listRouter.post("/sell", async (req, res) => {
   const { condition, type, image, userId } = req.body;
 
-  // Base prices
+  
   const basePrices = {
     CPU: 400,
     GPU: 500,
@@ -83,7 +63,7 @@ listRouter.post("/sell", async (req, res) => {
     "Hard Drive": 200,
   };
 
-  // Depreciation multipliers
+  
   const depreciation = {
     "Brand New": 1.0,
     "Lightly Used": 0.9,
@@ -92,16 +72,16 @@ listRouter.post("/sell", async (req, res) => {
   };
 
   try {
-    // Validate inputs
+
     if (!basePrices[type] || !depreciation[condition]) {
       return res.status(400).json({ error: "Invalid type or condition" });
     }
 
-    // Calculate price
+
     const originalPrice = basePrices[type];
     const finalPrice = originalPrice * depreciation[condition];
 
-    // Insert into Listings
+
     const listingResult = await pool.query(
       `INSERT INTO Listings (Condition, Price, Type, Image)
        VALUES ($1, $2, $3, $4)
@@ -111,7 +91,7 @@ listRouter.post("/sell", async (req, res) => {
 
     const listingId = listingResult.rows[0].listingid;
 
-    // Insert into User_Listing
+
     await pool.query(
       `INSERT INTO User_Listing (ListingID, UserID)
        VALUES ($1, $2)`,
@@ -144,13 +124,13 @@ listRouter.post("/buy", async (req, res) => {
   const { userId, listingId, price } = req.body;
 
   try {
-    // First, deduct the price from the user's balance
+
     await pool.query(
       `UPDATE users SET balance = balance - $1 WHERE userid = $2`,
       [price, userId]
     );
 
-    // Then, delete the listing from both Listings and User_Listing
+
     await pool.query(`DELETE FROM User_Listing WHERE listingid = $1`, [listingId]);
     await pool.query(`DELETE FROM Listings WHERE listingid = $1`, [listingId]);
 

@@ -1,16 +1,16 @@
 import pg from "pg";
 import dotenv from "dotenv";
-dotenv.config(); // Load environment variables
+dotenv.config(); 
 const { Pool } = pg;
 const PORT = process.env.PORT || 3000;
-// PostgreSQL connection pool
+
  const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // Required for Neon DB
+    rejectUnauthorized: false, 
   },
 });
-//***************** Connection */
+
 pool
   .connect()
   .then((client) => {
@@ -23,6 +23,4 @@ pool
   });
   console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
-
-//********************************************************* */
 export default pool;
