@@ -85,5 +85,40 @@ userRouter.post("/adduser", async (req, res) => {
   }
 });
 
+userRouter.get("/userdashboard", async (req, res) => {
+  const userId = req.query.id;
+
+  try {
+    const query = `
+      SELECT u.username, u.balance, l.listingid, l.condition, l.price, l.type, l.image
+      FROM users u
+      LEFT JOIN user_listing ul ON u.userid = ul.userid
+      LEFT JOIN listings l ON ul.listingid = l.listingid
+      WHERE u.userid = $1
+    `;
+    const result = await pool.query(query, [userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found or no listings." });
+    }
+
+    const { username, balance } = result.rows[0];
+    const listings = result.rows
+      .filter(row => row.listingid)
+      .map(row => ({
+        listingid: row.listingid,
+        condition: row.condition,
+        price: row.price,
+        type: row.type,
+        image: row.image
+      }));
+
+    res.json({ username, balance, listings });
+  } catch (error) {
+    console.error("Dashboard fetch error:", error);
+    res.status(500).json({ error: "Failed to fetch user dashboard." });
+  }
+});
+
 
 export default userRouter;

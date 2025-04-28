@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import userRouter from "./routes/UserRoutes.js";
+import listRouter from "./routes/ListingsRoute.js";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(
 );
 
 app.use("/shop", userRouter);
+app.use("/shop", listRouter);
 
 app.get("/", (req, res) => {
   try {

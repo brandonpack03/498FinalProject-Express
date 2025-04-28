@@ -73,7 +73,7 @@ listRouter.post("/sell", async (req, res) => {
 
   try {
     // Insert into Listings
-    const listingResult = await db.query(
+    const listingResult = await pool.query(
       `INSERT INTO Listings (Condition, Price, Type, Image)
        VALUES ($1, $2, $3, $4)
        RETURNING ListingID`,
@@ -83,7 +83,7 @@ listRouter.post("/sell", async (req, res) => {
     const listingId = listingResult.rows[0].listingid;
 
     // Insert into User_Listing
-    await db.query(
+    await pool.query(
       `INSERT INTO User_Listing (ListingID, UserID)
        VALUES ($1, $2)`,
       [listingId, userId]
@@ -96,4 +96,5 @@ listRouter.post("/sell", async (req, res) => {
   }
 });
 
-export default userRouter;
+
+export default listRouter;
