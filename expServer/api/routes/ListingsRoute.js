@@ -22,17 +22,22 @@ listRouter.get("/getuserlisting", async (req, res) => {
     res.status(500).json({ rows: [] });
   }
 });
+listRouter.delete("/deletelisting", async (req, res) => {
+  const { id } = req.query;
 
-listRouter.delete("/dellisting", async (req, res) => {
   try {
-    const id1 = req.query.id;
-    await pool.query("DELETE FROM listings WHERE listingid = $1", [id1]);
-    res.json({ ans: 1 });
+    // Delete from User_Listing first (foreign key dependency)
+    await pool.query("DELETE FROM User_Listing WHERE listingid = $1", [id]);
+    // Then delete from Listings
+    await pool.query("DELETE FROM Listings WHERE listingid = $1", [id]);
+
+    res.json({ message: "Listing deleted successfully" });
   } catch (error) {
-    console.error("Query error:", error);
-    res.json({ ans: 0 });
+    console.error("Error deleting listing:", error);
+    res.status(500).json({ error: "Failed to delete listing." });
   }
 });
+
 
 // userRouter.post("/updatelisting", async (req, res) => {
 //   try {
