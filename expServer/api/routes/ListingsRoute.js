@@ -120,5 +120,63 @@ listRouter.post("/sell", async (req, res) => {
   }
 });
 
+listRouter.get("/browselistings", async (req, res) => {
+  try {
+    const query = `
+      SELECT l.*, ul.userid
+      FROM Listings l
+      JOIN User_Listing ul ON l.listingid = ul.listingid
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching browse listings:", error);
+    res.status(500).json({ error: "Failed to fetch listings." });
+  }
+});
+
+listRouter.post("/buy", async (req, res) => {
+  const { userId, listingId, price } = req.body;
+
+  try {
+    // First, deduct the price from the user's balance
+    await pool.query(
+      `UPDATE users SET balance = balance - $1 WHERE userid = $2`,
+      [price, userId]
+    );
+
+    // Then, delete the listing from both Listings and User_Listing
+    await pool.query(`DELETE FROM User_Listing WHERE listingid = $1`, [listingId]);
+    await pool.query(`DELETE FROM Listings WHERE listingid = $1`, [listingId]);
+
+    res.json({ message: "Purchase successful" });
+  } catch (error) {
+    console.error("Error processing purchase:", error);
+    res.status(500).json({ error: "Failed to process purchase." });
+  }
+});
+
+listRouter.get("/getbalance", async (req, res) => {
+  const { id } = req.query;
+
+  try {
+    const result = await pool.query(
+      "SELECT balance FROM users WHERE userid = $1",
+      [id]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({ balance: result.rows[0].balance });
+    } else {
+      res.status(404).json({ error: "User not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching balance:", error);
+    res.status(500).json({ error: "Failed to fetch balance" });
+  }
+});
+
+
+
 //your mom
 export default listRouter;
